@@ -1,0 +1,90 @@
+DISEÑO DE SISTEMAS OPERATIVOS 
+
+PRACTICA MEMORIAS
+
+SEPTIEMBRE 2011
+
+AUTORES
+
+	GUZMAN HERREROS DE TEJADA, Alvaro	53619102F	040088
+	MORATILLA VARGAS, Juan Manuel		53441167T	040328
+
+CONTENIDO
+
+	Esta práctica consiste en el desarrollo de una aplicación (“memon”) que 
+	permita conocer el comportamiento de un programa con respecto a su uso 
+	de memoria dependiendo de la cantidad de memoria física disponible y del
+	algoritmo de reemplazo utilizado. Esto permite al alumno enfrentarse a 
+	situaciones muy similares a las que un gestor de memoria debe 
+	enfrentarse en su trabajo real, y a poder entender el uso de memoria que
+	los programas necesitan. El estudio se va a centrar en las regiones de 
+	código, regiones de datos que tengan o no un valor al inicio del 
+	programa, al heap y a las regiones correspondientes a archivos 
+	proyectados de forma privada o compartida.
+
+	El desarrollo de esta práctica se ha ido realizando de forma 
+	incremental. Se han complementado la versión inicial y la versión 
+	intermedia. La versión final no se ha podido completar ya que se ha 
+	decidido que se han cumplido un número considerable de requerimientos 
+	pedidos. Por tanto el archivo MARCO.C no ha sido modificado.
+
+	En la versión inicial se ha comenzado por la comprobación de que la 
+	dirección es válida. Para ello se realiza un bucle que recorriese cada 
+	región y utilizando los datos de la dirección inicial de cada región, 
+	el número de páginas y el tamaño de las mismas, para calcular si la 
+	dirección apunta a una dirección válida. A continuación se busca 
+	completar el tratamiento de los fallos con reemplazamiento y sin 
+	reemplazamiento. Para ello se reserva un marco y en caso de que la 
+	llamada devuelva un -1 se añade un fallo con reemplazamiento y se llama 
+	a la función REMPLAZO() para que seleccione el marco que se ha de 
+	reemplazar. A continuación se introduce la información en la entrada de 
+	páginas correspondiente para así poder saber más adelante si el fallo 
+	fue forzado o no. Se actualizan los permisos de la página desalojada 
+	para que vuelva a ejecutar la función si se vuelve a referenciar. Por 
+	último se almacena el número de marco en la entrada de página.
+
+	En la versión intermedia se han efectuado cambios en la estructura de la
+	entrada a la tabla de páginas a medida que han sido necesarios para 
+	poder controlar los factores necesarios para un correcto funcionamiento 
+	y control de los fallos. En esta ocasión se modifica el algoritmo 
+	anterior se devuelven los permisos originales menos PROT_WRITE si el bit
+	de enMemoria es 0, o si el bit enMemoria es 1 se devuelven los permisos 
+	originales y se modifica el bit pagModif a uno 1.
+
+
+	En la relación de ficheros usados en la práctica decir que se han 
+	modificado los siguientes:
+		- fallo.c: se ha completado la rutina fallo_pagina de la forma 
+			que se ha ido describiendo anteriormente.
+		- mapa.c: se han completado las siguientes rutinas:
+  			•cambio_tam_region: dados el tamaño necesario y la 
+  				dirección, se calcula la region a la que apunta 
+  				la dirección, se consulta el tamaño ocupado y se
+  				reajusta teniendo en cuenta el nuevo tamaño.
+			•iniciar_entrada_tpag: inicializa con los valores 
+				correctos una entrada a tabla de páginas.
+			•liberar_entrada_tpag: se consulta el número de marco y 
+				en caso de no ser -1 se desaloja.
+			•busqueda_region: es una función auxiliar, que nos 
+				permite dada una región y una dirección saber si
+				dicha dirección apunta a alguna parte de esa 
+				región.
+		- mapa.h: se ha completado la estructura de la entrada a tabla 
+			de páginas añadiendo los siguientes bits de control:
+			• numMarco: necesario para saber el número de marco que 
+				tiene asignado, si no tiene contendrá el 
+				valor -1.
+			• pagModif: necesario para saber si la página ha sido 
+				modificada.
+			• pagAcceso: necesario para saber si se ha accedida con 
+				anterioridad.
+			• enMemoria: necesario para saber si se encuentra en 
+				memoria principal.
+			• pagOrigen: necesario para saber si se conserva de 
+				forma original.
+
+	Los demás archivos no han sido modificados.
+	
+COMENTARIOS
+
+	

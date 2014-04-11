@@ -1,0 +1,158 @@
+DISEÑO DE SISTEMAS OPERATIVOS
+
+PRACTICA MINIKERNEL
+
+SEPTIEMBRE 2011
+
+INDICE DE CONTENIDOS
+	
+	- Autores
+	- Introducción
+	- Inclusión de una llamada simple
+	- Llamada que bloquea al proceso un plazo de tiempo
+	- Contabilidad del uso del procesador por parte de un proceso
+	- Mutex
+		- Crear mutex
+		- Abrir mutex
+		- Bloquear mutex
+		- Des-bloquear mutex
+		- Cerrar mutex
+	- Round-Robin
+	- Manejo básico de la entrada por teclado
+	- Comentarios
+	
+AUTORES
+	
+	MORATILLA VARGAS, Juan Manuel		53441167T	040328
+	GUZMAN HERREROS DE TEJADA, Alvaro	53619102F	040088
+	
+INTRODUCCION
+
+	El objetivo de esta práctica es modificar una serie de archivos para 
+	famicializarse con el funcionamiento de un sistema operativo real, 
+	añadiendo nuevas funcionalidades al mismo para asi conocerlo 
+	profundamente.
+	
+INCLUSION DE UNA LLAMADA SIMPLE
+
+	En esta llamada unicamente se ha de devolver un campo de la estructura 
+	del BCP, el correspondiente al identificador del proceso.
+	
+LLAMADA QUE BLOQUEA AL PROCESO UN PLAZO DE TIEMPO
+
+	Esta funcionalidad ha de dejar al proceso que hace la llamada, bloqueado 
+	durante el periodo de tiempo que se indica como argumento de la llamada.
+	
+	Para realizarlo, se decidió incluir un nuevo campo en el BCP del proceso
+	que funcionará de timeout de dicho proceso. También se creó una lista
+	para los procesos que han de permanecer dormidos un periodo de tiempo.
+	
+	El funcionamiento es simple, cuando se hace la llamada, el campo 
+	"sleep-time" del BCP se inicializa al valor dado, multiplicado por el 
+	número de tick por segundo del reloj del procesador simulado. También se
+	bloquea el proceso y se introduce en la lista de procesos dormidos 
+	(lista_dormidos). Una vez hecho esto, cada vez que se produce una 
+	interrupción del reloj (un tick), se decrementa el campo del BCP de 
+	todos los procesos que esten en dicha lista. Si al decrementar, dicho 
+	campo es igual 0, es decir, ya ha permanecido dormido todo el tiempo que
+	debía de estarlo, se desbloquea y se introduce en la lista de procesos
+	listos para ejecutar.
+	
+CONTABILIDAD DEL USO DEL PROCESADOR POR PARTE DE UN PROCESO
+
+	Esta llamada del sistema ha de retornar, si no se le pasa ningún 
+	argumento, unicamente el número de interrupciones de reloj que se han
+	producido desde que el sistema arrancó. Para ello, se ha creado una 
+	variable global que se incrementa cada vez que se produce una 
+	interrupción de reloj.
+	
+	Por otro lado, si a dicha función se le pasa argumento, además de 
+	retornar lo anteriormente descrito, se han de introducir en la dirección 
+	de memoria pasada como argumento, los tiempos que el proceso ha pasado 
+	ejecutando en los distintos modos, modo sistema o modo usuario. El modo 
+	de trabajar con estos tiempos, como se facilita en el enunciado, es 
+	através de una estructrua que contiene dos campos, un campo que hace 
+	referencia al tiempo que el proceso ha estado ejecutando en modo 
+	sistema, y la otra hace referencia al tiempo que ha estado ejecutandose 
+	en modo usuario. Esta estructura de tiempos se ha incluido en el BCP del
+	proceso y se actualiza cada vez que se produce una interrupción de 
+	reloj, diferenciando si esa interrupción se ha producido en modo usuario 
+	o en modo sistema, actualizando así, el campo correspondiente de la 
+	estructura de tiempos del BCP del proceso.
+
+MUTEX	
+
+	En este apartado se pide implementar dicho servicio de sincronización. 
+	Este servicio dispone de las cuatro llamadas distintas al sistema que se 
+	indican en el índice. Para llevar a cabo este servicio, se crea un 
+	estructura que hace referencia a un mutex. Dado que se pueden crear 
+	varios mutex en el sistema, también se crea un array que tendrá 
+	información de todos los mutex creados. Para facilitar la 
+	implementación, cada elemento del array tiene tres campos distintos, el 
+	propio mutex, un campo que indica si ese elemento del array esta siendo 
+	usado, y otro que nos indicará el número de procesos asociados a ese 
+	mutex. Además, para simplificar el código, se creo una variable global 
+	que lleva la cuenta del número de mutex que se han creado en el sistema. 
+	Por otro lado, se ha incluido en el BCP un campo más, que serán los 
+	descriptores de los mutex en ese proceso y otro campo que, al igual que 
+	el creado para los mutex, sirve para llevar una cuenta de los mutex 
+	asociados a ese proceso.	
+	
+	Un campo importante de la estructura que hace referencia al mutex, es 
+	el campo que contiene la lista de procesos bloqueados a la espera de
+	que se libere el mutex. Otro, es el que indica si el mutex esta 
+	bloqueado o no.
+	
+	Para el correcto funcinamiento de los mutex, se hacen las comprobaciones
+	exigidas en el enunciado tanto a la hora de crear un mutex, como a la 
+	hora de abrirlo, bloquearlo o des-bloquearlo. Por otro lado, se destaca 
+	la creación de una función auxiliar que cierra el mutex cuyo 
+	identificador es el pasado como argumento. Esta función auxiliar se ha 
+	creado principalmente para realizar el cierre de todos los mutex que un 
+	proceso tiene abiertos en el caso de que el proceso termine (cierre 
+	implicito asociado a la finalización de un proceso). La llamada al 
+	sistema para cerrar el mutex, hace uso directamente de esta función 
+	auxiliar.
+	
+ROUND-ROBIN
+
+	En este apartado se pide sustituir el algoritmo de planificación. Con 
+	este algoritmo se asignan rodajas de tiempo a cada proceso que entra a
+	ejecutar y una vez terminado ese tiempo, entrará a ejecutar el siguiente
+	proceso listo.
+	
+	Para realizar esta modificación unicamente se ha incluido un nuevo campo
+	en la estructura del BCP del proceso, el cual hará de contador de 
+	tiempo, de tal forma que al entrar a ejecutar se le asigna la rodaja de
+	tiempo entera y por cada interrupción de reloj se decrementará. Si al 
+	decrementar llega a cero, se produce una interrupción software que hará
+	que el proceso abandone el procesador.
+	
+MANEJO BASICO DE LA ENTRADA POR TECLADO
+
+	Cuando se realiza la llamada al sistema pidiendo leer un caracter, se 
+	comprueba que hay caracteres listos, en caso contrario, el proceso se
+	bloquea y se introduce en una cola (lista_bloqueados_caracter) a la 
+	espera de que se produzca una interrupcion de terminal que proporcione 
+	un caracter. De este modo, será la rutina que trate la interrupción de 
+	terminal la que se encargará de	desbloquear a los procesos que esperen 
+	por la lectura de un caracter.
+
+	Para leer caracteres através del terminal se ha implementado un buffer
+	circular. Cada vez que hay una interrupción de terminal, se intenta 
+	escribir el caracter en el buffer, si hay hueco se escribe, en caso 
+	contrario se descarta. Si al leer el caracter, hay procesos esperando
+	por dicho caracter en la cola anteriormente mencionada, se desbloquea el
+	que lleve más tiempo esperando.
+	
+	Cuando se esta leyendo el caracter del terminal se bloquean las 
+	interrupciones provenientes del terminal.
+		
+COMENTARIOS
+
+	La práctica nos ha parecedo útil para afianzar conocimientos más en 
+	profundidad sobre el sistema operativo.
+	
+	En principio, antes de entrar en profundidad en ella, nos pareció más
+	complicada que lo que en realidad ha resultado ser, un poco laboriosa 
+	pero no en exceso.
